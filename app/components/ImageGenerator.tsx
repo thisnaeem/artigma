@@ -325,8 +325,8 @@ export default function ImageGenerator() {
                         key={i}
                         className={`h-1 rounded-full transition-all duration-200 ${
                           i < numSteps
-                            ? 'bg-gradient-to-r from-purple-500 to-purple-600'
-                            : 'bg-purple-500/20'
+                            ? "bg-gradient-to-r from-purple-500 to-purple-600"
+                            : "bg-purple-500/20"
                         }`}
                       />
                     ))}

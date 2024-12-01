@@ -1,18 +1,23 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { PhotoIcon, ClockIcon, Square3Stack3DIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import {
+  PhotoIcon,
+  ClockIcon,
+  Square3Stack3DIcon,
+  Cog6ToothIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const navigation = [
-    { name: 'Generate', href: '/', icon: PhotoIcon },
-    { name: 'Bulk Generate', href: '/bulk', icon: Square3Stack3DIcon },
-    { name: 'History', href: '/history', icon: ClockIcon },
-    { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+    { name: "Generate", href: "/", icon: PhotoIcon },
+    { name: "Bulk Generate", href: "/bulk", icon: Square3Stack3DIcon },
+    { name: "History", href: "/history", icon: ClockIcon },
+    { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
   ];
 
   return (
@@ -28,14 +33,14 @@ export default function Sidebar() {
               priority
             />
           </div>
-          <h1 className="text-xl font-semibold text-white">
-            Artigma
-          </h1>
+          <h1 className="text-xl font-semibold text-white">Artigma</h1>
         </Link>
       </div>
       <nav className="flex flex-1 flex-col p-4">
         <div className="mb-4">
-          <p className="px-2 text-xs font-semibold text-purple-200/50 uppercase tracking-wider">MENU</p>
+          <p className="px-2 text-xs font-semibold text-purple-200/50 uppercase tracking-wider">
+            MENU
+          </p>
         </div>
         <ul role="list" className="flex flex-1 flex-col gap-1">
           {navigation.map((item) => {
@@ -46,9 +51,10 @@ export default function Sidebar() {
                   href={item.href}
                   className={`
                     group flex gap-x-3 rounded-xl p-2 text-sm font-medium transition-all duration-200
-                    ${isActive 
-                      ? 'bg-purple-500/20 text-purple-200 border border-purple-500/20' 
-                      : 'text-purple-200/70 hover:bg-purple-500/10 hover:text-purple-200'
+                    ${
+                      isActive
+                        ? "bg-purple-500/20 text-purple-200 border border-purple-500/20"
+                        : "text-purple-200/70 hover:bg-purple-500/10 hover:text-purple-200"
                     }
                   `}
                 >
@@ -62,4 +68,4 @@ export default function Sidebar() {
       </nav>
     </div>
   );
-} 
+}
