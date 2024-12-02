@@ -8,13 +8,15 @@ import {
   ClockIcon,
   Square3Stack3DIcon,
   Cog6ToothIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const navigation = [
-    { name: "Generate", href: "/", icon: PhotoIcon },
+    { name: "Search", href: "/", icon: PhotoIcon },
+    { name: "Generate", href: "/generate", icon: SparklesIcon },
     { name: "Bulk Generate", href: "/bulk", icon: Square3Stack3DIcon },
     { name: "History", href: "/history", icon: ClockIcon },
     { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
