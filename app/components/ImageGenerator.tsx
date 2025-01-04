@@ -6,6 +6,7 @@ import {
   StarIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import ImagePreview from "./ImagePreview";
 
 interface AspectRatio {
   label: string;
@@ -66,6 +67,8 @@ export default function ImageGenerator() {
   );
   const [numSteps, setNumSteps] = useState(4);
   const [showNSFWWarning, setShowNSFWWarning] = useState(false);
+  const [autoDownload, setAutoDownload] = useState(true);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const enhancePrompt = async () => {
     const apiKey = localStorage.getItem("gemini_api_key");
@@ -121,7 +124,7 @@ export default function ImageGenerator() {
         !error.message.includes("Content Warning")
       ) {
         alert(error.message);
-      } else if (!error instanceof Error) {
+      } else if (!(error instanceof Error)) {
         alert("Failed to enhance prompt");
       }
     } finally {
@@ -152,7 +155,7 @@ export default function ImageGenerator() {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse;
 
       if (data.error === "NSFW content detected") {
         setShowNSFWWarning(true);
@@ -166,6 +169,19 @@ export default function ImageGenerator() {
 
       setGeneratedImage(data.dataURI);
       setProgress(100);
+
+      // Automatically download if enabled
+      if (autoDownload) {
+        const fileName = cleanFileName(prompt);
+        const timestamp = new Date()
+          .toISOString()
+          .replace(/[-:]/g, "")
+          .split(".")[0];
+        const link = document.createElement("a");
+        link.href = data.dataURI;
+        link.download = `${fileName}-${timestamp}.jpg`;
+        link.click();
+      }
     } catch (error) {
       console.error("Error:", error);
       alert(
@@ -338,6 +354,18 @@ export default function ImageGenerator() {
                 </div>
               </div>
             </div>
+
+            <div>
+              <label className="flex items-center space-x-2 text-sm font-medium text-purple-200">
+                <input
+                  type="checkbox"
+                  checked={autoDownload}
+                  onChange={(e) => setAutoDownload(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-purple-500 focus:ring-purple-500"
+                />
+                <span>Auto-download generated images</span>
+              </label>
+            </div>
           </div>
 
           <button
@@ -368,7 +396,8 @@ export default function ImageGenerator() {
               <img
                 src={generatedImage}
                 alt="Generated image"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={() => setPreviewImage(generatedImage)}
               />
             </div>
             <div className="mt-4 flex justify-end gap-3">
@@ -387,6 +416,14 @@ export default function ImageGenerator() {
               </button>
             </div>
           </div>
+        )}
+
+        {previewImage && (
+          <ImagePreview
+            imageUrl={previewImage}
+            alt="Generated image preview"
+            onClose={() => setPreviewImage(null)}
+          />
         )}
       </div>
     </div>

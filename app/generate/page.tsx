@@ -84,6 +84,7 @@ export default function GeneratePage() {
   const [pages, setPages] = useState(1);
   const [selectedRatio, setSelectedRatio] = useState<AspectRatio>(aspectRatios[0]);
   const [numSteps, setNumSteps] = useState(4);
+  const [autoDownload, setAutoDownload] = useState(true);
 
   const fetchResults = async (params: SearchParams): Promise<SearchResult[]> => {
     let results: SearchResult[] = [];
@@ -203,6 +204,11 @@ export default function GeneratePage() {
             title: title,
             url: imageUrl
           }]);
+
+          // Auto-download if enabled
+          if (autoDownload) {
+            downloadImage(imageUrl, title);
+          }
         }
         
         setProgress(prev => ({ ...prev, current: i + 1 }));
@@ -347,6 +353,18 @@ export default function GeneratePage() {
                       <span>High Quality</span>
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-purple-200">
+                    <input
+                      type="checkbox"
+                      checked={autoDownload}
+                      onChange={(e) => setAutoDownload(e.target.checked)}
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-purple-500 focus:ring-purple-500"
+                    />
+                    <span>Auto-download generated images</span>
+                  </label>
                 </div>
               </div>
 

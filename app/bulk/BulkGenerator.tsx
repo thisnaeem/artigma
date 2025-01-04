@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import Sidebar from "../components/Sidebar";
+import ImagePreview from "../components/ImagePreview";
 
 interface AspectRatio {
   label: string;
@@ -40,6 +41,7 @@ export default function BulkGenerator() {
   const [selectedRatio, setSelectedRatio] = useState<AspectRatio>(aspectRatios[0]);
   const [numSteps, setNumSteps] = useState(4);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const generateSingleImage = async (): Promise<string | null> => {
     try {
@@ -247,7 +249,8 @@ export default function BulkGenerator() {
                       <img
                         src={image}
                         alt={`Generated image ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setPreviewImage(image)}
                       />
                     </div>
                     <div className="mt-2 text-center text-sm text-purple-200/70">
@@ -256,6 +259,14 @@ export default function BulkGenerator() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {previewImage && (
+              <ImagePreview
+                imageUrl={previewImage}
+                alt="Generated image preview"
+                onClose={() => setPreviewImage(null)}
+              />
             )}
           </div>
         </div>
