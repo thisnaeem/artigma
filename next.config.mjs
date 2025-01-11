@@ -7,6 +7,9 @@ if (process.env.NODE_ENV === 'development') {
     await setupDevPlatform({
       bindings: {
         AI: {
+          async fetch(request) {
+            return new Response('Mock AI Response');
+          },
           async run(model, input) {
             console.log('AI.run called with:', { model, input });
             return {
@@ -14,7 +17,13 @@ if (process.env.NODE_ENV === 'development') {
             };
           }
         }
-      }
+      },
+      d1Databases: {},
+      r2Buckets: {},
+      kvNamespaces: {},
+      durableObjects: {},
+      vectorize: {},
+      services: {}
     });
   } catch (error) {
     console.warn('Warning: Failed to setup dev platform:', error);
