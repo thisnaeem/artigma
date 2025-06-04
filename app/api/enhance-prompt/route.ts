@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const runtime = 'edge';
+
 interface EnhancePromptRequest {
   prompt: string;
   apiKey: string;

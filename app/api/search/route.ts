@@ -3,6 +3,8 @@
 import { SearchParams, SearchResponse } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   const params: SearchParams = await request.json();
 
