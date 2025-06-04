@@ -37,44 +37,56 @@ export async function POST(request: NextRequest) {
     const isVisionModel = selectedModel.includes('vision');
     const hasImage = !!image;
 
-    let aiInput;
+    let response;
     
-    if (isVisionModel && hasImage) {
-      // Format for vision models with image
-      const lastMessage = messages[messages.length - 1];
-      
-      aiInput = {
-        messages: [
-          ...messages.slice(0, -1).map(msg => ({
+    try {
+      if (isVisionModel && hasImage) {
+        // Format for vision models with image
+        const lastMessage = messages[messages.length - 1];
+        
+        const chatInput = {
+          messages: [
+            ...messages.slice(0, -1).map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            {
+              role: lastMessage.role,
+              content: [
+                { type: "text", text: lastMessage.content },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: image
+                  }
+                }
+              ]
+            }
+          ]
+        };
+        
+        // Cast everything to any to bypass type checking issues
+        const anyAi = ai as any;
+        const anyModel = selectedModel as any;
+        response = await anyAi.run(anyModel, chatInput);
+      } else {
+        // Standard format for text-only models
+        const chatInput = {
+          messages: messages.map(msg => ({
             role: msg.role,
             content: msg.content
-          })),
-          {
-            role: lastMessage.role,
-            content: [
-              { type: "text", text: lastMessage.content },
-              {
-                type: "image_url",
-                image_url: {
-                  url: image
-                }
-              }
-            ]
-          }
-        ]
-      };
-    } else {
-      // Standard format for text-only models
-      aiInput = {
-        messages: messages.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }))
-      };
+          }))
+        };
+        
+        // Cast everything to any to bypass type checking issues
+        const anyAi = ai as any;
+        const anyModel = selectedModel as any;
+        response = await anyAi.run(anyModel, chatInput);
+      }
+    } catch (error: any) {
+      console.error("Error calling AI model:", error);
+      throw new Error(`Failed to process with model ${selectedModel}: ${error.message}`);
     }
-
-    // Run the selected model with appropriate input format
-    const response = await ai.run(selectedModel as any, aiInput);
 
     // Handle different response formats
     let responseText;

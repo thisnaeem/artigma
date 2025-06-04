@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'localhost:3001', 'localhost:3002']
+    }
   }
 };
 
@@ -25,8 +27,15 @@ if (process.env.NODE_ENV === 'development') {
                 image: 'base64_mock_upscaled_image_data'
               };
             }
+            // Handle vision models
+            if (model.includes('vision')) {
+              return {
+                content: 'This is a response from the vision model analyzing the image.'
+              };
+            }
+            // Default response for text models
             return {
-              image: 'base64_mock_image_data'
+              response: 'This is a mock response from the AI chat model.'
             };
           }
         }
