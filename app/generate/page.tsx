@@ -62,6 +62,15 @@ const cleanFileName = (str: string): string => {
     .slice(0, 50);
 };
 
+const availableImageModels = [
+  '@cf/black-forest-labs/flux-1-schnell',
+  '@cf/bytedance/stable-diffusion-xl-lightning',
+  '@cf/lykon/dreamshaper-8-lcm',
+  '@cf/runwayml/stable-diffusion-v1-5-img2img',
+  '@cf/runwayml/stable-diffusion-v1-5-inpainting',
+  '@cf/stability-ai/stable-diffusion-xl-base-1.0',
+];
+
 export default function GeneratePage() {
   const [searchParams, setSearchParams] = useState<SearchParams>({
     query: "",
@@ -85,6 +94,7 @@ export default function GeneratePage() {
   const [selectedRatio, setSelectedRatio] = useState<AspectRatio>(aspectRatios[0]);
   const [numSteps, setNumSteps] = useState(4);
   const [autoDownload, setAutoDownload] = useState(true);
+  const [selectedImageModel, setSelectedImageModel] = useState(availableImageModels[0]);
 
   const fetchResults = async (params: SearchParams): Promise<SearchResult[]> => {
     let results: SearchResult[] = [];
@@ -148,6 +158,7 @@ export default function GeneratePage() {
           num_steps: numSteps,
           width: selectedRatio.width,
           height: selectedRatio.height,
+          model: selectedImageModel,
         }),
       });
 
@@ -242,63 +253,59 @@ export default function GeneratePage() {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto p-6">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-400 text-transparent bg-clip-text">
-              Stock Image Generator
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Image Generator
             </h2>
-            <p className="mt-2 text-purple-200/70">Generate AI images from Adobe Stock titles.</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Generate AI images from text descriptions.
+            </p>
           </div>
 
           <div className="space-y-6">
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleGenerate();
-              }} 
-              className="space-y-6 bg-white/5 backdrop-blur-xl p-6 rounded-2xl border border-white/10"
-            >
-              <div>
-                <label htmlFor="keyword" className="block text-sm font-medium text-purple-200">
-                  Enter your keyword
+            <div className="bg-white dark:bg-gray-800 p-6 border border-gray-200 dark:border-gray-700">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-200">
+                  Enter your prompt
                 </label>
                 <div className="mt-1 relative">
                   <Input
-                    id="keyword"
-                    type="text"
-                    placeholder="Enter a keyword to search Adobe Stock..."
+                    placeholder="A stunning landscape with mountains..."
                     value={searchParams.query}
-                    onChange={(e) => setSearchParams({ ...searchParams, query: e.target.value })}
-                    className="block w-full rounded-xl border border-white/10 bg-white/5 p-4 pr-12 text-white placeholder-purple-200/50 focus:border-purple-500 focus:ring-purple-500 sm:text-sm backdrop-blur-xl"
+                    onChange={(e) =>
+                      setSearchParams({ ...searchParams, query: e.target.value })
+                    }
+                    className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-900 dark:text-white placeholder-gray-400 focus:border-black dark:focus:border-white focus:ring-0"
                   />
-                  <SparklesIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-300" />
+                  <SparklesIcon className="absolute top-3 right-3 h-5 w-5 text-gray-400" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-purple-200">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-200">
                     Number of Pages
                   </label>
                   <Input
                     type="number"
-                    min="1"
-                    max="10"
+                    min={1}
+                    max={10}
                     value={pages}
-                    onChange={(e) => setPages(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
-                    className="mt-1 block w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-white focus:border-purple-500 focus:ring-purple-500 backdrop-blur-xl"
+                    onChange={(e) => setPages(parseInt(e.target.value) || 1)}
+                    className="mt-1 w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-0"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-purple-200">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-200">
                     Aspect Ratio
                   </label>
                   <select
                     value={JSON.stringify(selectedRatio)}
                     onChange={(e) => setSelectedRatio(JSON.parse(e.target.value))}
-                    className="mt-1 block w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-white focus:border-purple-500 focus:ring-purple-500 backdrop-blur-xl [&>option]:bg-[#1e1b4b] [&>option]:text-white"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-0"
                   >
                     {aspectRatios.map((ratio) => (
                       <option key={ratio.label} value={JSON.stringify(ratio)}>
@@ -309,114 +316,113 @@ export default function GeneratePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-purple-200">
-                    Quality Steps ({numSteps})
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-200">
+                    Model
                   </label>
-                  <div className="mt-2 relative">
-                    <input
-                      type="range"
-                      min="1"
-                      max="8"
-                      value={numSteps}
-                      onChange={(e) => setNumSteps(Number(e.target.value))}
-                      className="w-full h-2 appearance-none bg-gradient-to-r from-purple-500/20 to-purple-500/20 rounded-lg cursor-pointer relative
-                        before:absolute before:top-1/2 before:left-0 before:h-[2px] before:bg-gradient-to-r before:from-purple-500 before:to-purple-700 before:transform before:-translate-y-1/2
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full 
-                        [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-400 [&::-webkit-slider-thumb]:to-purple-600
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-purple-500/25
-                        [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-purple-300/50
-                        [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:duration-150
-                        [&::-webkit-slider-thumb]:hover:scale-110
-                        [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-gradient-to-r [&::-moz-range-thumb]:from-purple-400 [&::-moz-range-thumb]:to-purple-600
-                        [&::-moz-range-thumb]:shadow-lg [&::-moz-range-thumb]:shadow-purple-500/25
-                        [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-purple-300/50
-                        [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:transition-all [&::-moz-range-thumb]:duration-150
-                        [&::-moz-range-thumb]:hover:scale-110"
-                    />
-                    <div className="mt-1 flex justify-between px-1">
-                      <div className="grid grid-cols-8 w-full gap-1">
-                        {[...Array(8)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`h-1 rounded-full transition-all duration-200 ${
-                              i < numSteps
-                                ? 'bg-gradient-to-r from-purple-500 to-purple-600'
-                                : 'bg-purple-500/20'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="mt-1 flex justify-between text-xs text-purple-200/50">
-                      <span>Fast</span>
-                      <span>High Quality</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center space-x-2 text-sm font-medium text-purple-200">
-                    <input
-                      type="checkbox"
-                      checked={autoDownload}
-                      onChange={(e) => setAutoDownload(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-purple-500 focus:ring-purple-500"
-                    />
-                    <span>Auto-download generated images</span>
-                  </label>
+                  <select
+                    value={selectedImageModel}
+                    onChange={(e) => setSelectedImageModel(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-0"
+                  >
+                    {availableImageModels.map((model) => (
+                      <option key={model} value={model}>
+                        {model.split('/').pop()}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-200">
+                  Quality Steps ({numSteps})
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="8"
+                  step="1"
+                  value={numSteps}
+                  onChange={(e) => setNumSteps(Number(e.target.value))}
+                  className="mt-2 w-full h-2 bg-gray-200 dark:bg-gray-700 appearance-none cursor-pointer"
+                />
+                <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Fast</span>
+                  <span>High Quality</span>
+                </div>
+              </div>
+
+              <div className="flex items-center mb-4">
+                <input
+                  id="auto-download"
+                  type="checkbox"
+                  checked={autoDownload}
+                  onChange={(e) => setAutoDownload(e.target.checked)}
+                  className="h-4 w-4 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-0"
+                />
+                <label
+                  htmlFor="auto-download"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
+                  Auto-download generated images
+                </label>
+              </div>
+
               <Button
-                type="submit"
-                disabled={isGenerating || !searchParams.query.trim()}
-                className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-lg shadow-purple-500/25"
+                onClick={handleGenerate}
+                disabled={isGenerating || !searchParams.query}
+                className="w-full bg-black dark:bg-white text-white dark:text-black px-4 py-3 hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200"
               >
-                {isGenerating ? `Generating (${progress.current}/${progress.total})` : "Generate Images"}
+                {isGenerating ? (
+                  <>
+                    Generating {progress.current}/{progress.total}...
+                  </>
+                ) : (
+                  "Generate Images"
+                )}
               </Button>
 
-              {isGenerating && (
-                <div className="w-full bg-white/10 rounded-full h-1">
-                  <div 
-                    className="bg-gradient-to-r from-purple-500 to-purple-700 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              {isGenerating && progress.total > 0 && (
+                <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 h-1">
+                  <div
+                    className="bg-black dark:bg-white h-1 transition-all duration-300"
+                    style={{
+                      width: `${(progress.current / progress.total) * 100}%`,
+                    }}
                   />
                 </div>
               )}
-            </form>
+            </div>
 
             {images.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold text-purple-200">
-                    Generated Images ({images.length})
-                  </h3>
-                </div>
+              <div className="bg-white dark:bg-gray-800 p-6 border border-gray-200 dark:border-gray-700">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Generated Images ({images.length})
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {images.map((image) => (
                     <div
                       key={image.id}
-                      className="group bg-white/5 backdrop-blur-xl p-4 rounded-2xl border border-white/10 transition-all duration-200 hover:border-purple-500/50"
+                      className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
                     >
-                      <div className={`relative rounded-xl overflow-hidden mb-3 ${getAspectRatioClass(selectedRatio)}`}>
+                      <div className={`${getAspectRatioClass(selectedRatio)} relative overflow-hidden`}>
                         <img
                           src={image.url}
                           alt={image.title}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Button
-                            onClick={() => downloadImage(image.url, image.title)}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-md"
-                          >
-                            Download
-                          </Button>
-                        </div>
                       </div>
-                      <p className="text-sm text-purple-200/90 line-clamp-2">
-                        {image.title}
-                      </p>
+                      <div className="p-3">
+                        <p className="text-sm text-gray-900 dark:text-white truncate">
+                          {image.title}
+                        </p>
+                        <button
+                          onClick={() => downloadImage(image.url, image.title)}
+                          className="mt-2 w-full bg-white dark:bg-gray-900 text-black dark:text-white border border-black dark:border-white px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          Download
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -424,7 +430,7 @@ export default function GeneratePage() {
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 } 

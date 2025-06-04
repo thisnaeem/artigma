@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       width = 1024,
       height = 1024,
       upscale = 1,
+      model,
     } = await request.json();
 
     const ctx = getRequestContext();
@@ -24,6 +25,8 @@ export async function POST(request: NextRequest) {
     if (!prompt) {
       return Response.json({ error: "Prompt is required" }, { status: 400 });
     }
+
+    const selectedImageModel = model || '@cf/black-forest-labs/flux-1-schnell';
 
     // Validate upscale factor
     const upscaleFactor = Number(upscale);
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
     const finalHeight = baseHeight * upscaleFactor;
 
     // Generate initial image
-    const response = await ai.run("@cf/black-forest-labs/flux-1-schnell", {
+    const response = await ai.run(selectedImageModel as any, {
       prompt,
       num_steps: Math.min(num_steps, 8),
       width: baseWidth,
