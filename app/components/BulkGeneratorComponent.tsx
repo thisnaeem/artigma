@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
+import StyleSelector from "./StyleSelector";
+import AutoPrompt from "./AutoPrompt";
+import { applyStyleToPrompt } from '@/lib/imageStyles';
 
 interface AspectRatio {
   label: string;
@@ -49,16 +52,28 @@ export default function BulkGeneratorComponent() {
   const [numSteps, setNumSteps] = useState(4);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImageModel, setSelectedImageModel] = useState(availableImageModels[0]);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem('bulk_generator_prompt');
+    if (savedPrompt) {
+      setPrompt(savedPrompt);
+      localStorage.removeItem('bulk_generator_prompt');
+    }
+  }, []);
 
   const generateSingleImage = async (): Promise<string | null> => {
     try {
+      // Apply style to prompt if selected
+      const styledPrompt = selectedStyle ? applyStyleToPrompt(prompt, selectedStyle) : prompt;
+      
       const response = await fetch("/api/generate_image", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt,
+          prompt: styledPrompt,
           num_steps: numSteps,
           width: selectedRatio.width,
           height: selectedRatio.height,
@@ -140,6 +155,17 @@ export default function BulkGeneratorComponent() {
             <SparklesIcon className="absolute top-3 right-3 h-5 w-5 text-gray-400" />
           </div>
         </div>
+
+        <AutoPrompt
+          onPromptSelect={setPrompt}
+          className="mb-4"
+        />
+
+        <StyleSelector
+          selectedStyle={selectedStyle}
+          onStyleSelect={setSelectedStyle}
+          className="mb-4"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>

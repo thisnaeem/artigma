@@ -4,7 +4,10 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Sidebar from '../components/Sidebar'; 
+import StyleSelector from '../components/StyleSelector';
+import AutoPrompt from '../components/AutoPrompt';
 import { SparklesIcon } from "@heroicons/react/24/outline";
+import { applyStyleToPrompt } from '@/lib/imageStyles';
 
 interface AspectRatio {
   label: string;
@@ -95,6 +98,7 @@ export default function GeneratePage() {
   const [numSteps, setNumSteps] = useState(4);
   const [autoDownload, setAutoDownload] = useState(true);
   const [selectedImageModel, setSelectedImageModel] = useState(availableImageModels[0]);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
 
   const fetchResults = async (params: SearchParams): Promise<SearchResult[]> => {
     let results: SearchResult[] = [];
@@ -148,13 +152,16 @@ export default function GeneratePage() {
 
   const generateSingleImage = async (prompt: string): Promise<string | null> => {
     try {
+      // Apply style to prompt if selected
+      const styledPrompt = selectedStyle ? applyStyleToPrompt(prompt, selectedStyle) : prompt;
+      
       const response = await fetch("/api/generate_image", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt,
+          prompt: styledPrompt,
           num_steps: numSteps,
           width: selectedRatio.width,
           height: selectedRatio.height,
@@ -282,6 +289,17 @@ export default function GeneratePage() {
                   <SparklesIcon className="absolute top-3 right-3 h-5 w-5 text-gray-400" />
                 </div>
               </div>
+
+              <AutoPrompt
+                onPromptSelect={(prompt) => setSearchParams({ ...searchParams, query: prompt })}
+                className="mb-4"
+              />
+
+              <StyleSelector
+                selectedStyle={selectedStyle}
+                onStyleSelect={setSelectedStyle}
+                className="mb-4"
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>

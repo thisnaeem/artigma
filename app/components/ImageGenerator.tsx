@@ -7,6 +7,9 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import ImagePreview from "./ImagePreview";
+import StyleSelector from "./StyleSelector";
+import AutoPrompt from "./AutoPrompt";
+import { applyStyleToPrompt } from '@/lib/imageStyles';
 
 interface AspectRatio {
   label: string;
@@ -69,6 +72,7 @@ export default function ImageGenerator() {
   const [showNSFWWarning, setShowNSFWWarning] = useState(false);
   const [autoDownload, setAutoDownload] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
 
   const enhancePrompt = async () => {
     const apiKey = localStorage.getItem("gemini_api_key");
@@ -142,13 +146,16 @@ export default function ImageGenerator() {
     }, 500);
 
     try {
+      // Apply style to prompt if selected
+      const styledPrompt = selectedStyle ? applyStyleToPrompt(prompt, selectedStyle) : prompt;
+      
       const response = await fetch("/api/generate_image", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt,
+          prompt: styledPrompt,
           num_steps: numSteps,
           width: selectedRatio.width,
           height: selectedRatio.height,
@@ -294,6 +301,17 @@ export default function ImageGenerator() {
               </div>
             </div>
           </div>
+
+          <AutoPrompt
+            onPromptSelect={setPrompt}
+            className="mb-4"
+          />
+
+          <StyleSelector
+            selectedStyle={selectedStyle}
+            onStyleSelect={setSelectedStyle}
+            className="mb-4"
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

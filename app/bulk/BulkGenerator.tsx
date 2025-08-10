@@ -4,6 +4,9 @@ import { useState, FormEvent } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import Sidebar from "../components/Sidebar";
 import ImagePreview from "../components/ImagePreview";
+import StyleSelector from "../components/StyleSelector";
+import AutoPrompt from "../components/AutoPrompt";
+import { applyStyleToPrompt } from '@/lib/imageStyles';
 
 interface AspectRatio {
   label: string;
@@ -42,16 +45,20 @@ export default function BulkGenerator() {
   const [numSteps, setNumSteps] = useState(4);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
 
   const generateSingleImage = async (): Promise<string | null> => {
     try {
+      // Apply style to prompt if selected
+      const styledPrompt = selectedStyle ? applyStyleToPrompt(prompt, selectedStyle) : prompt;
+      
       const response = await fetch("/api/generate_image", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt,
+          prompt: styledPrompt,
           num_steps: numSteps,
           width: selectedRatio.width,
           height: selectedRatio.height,
@@ -141,6 +148,19 @@ export default function BulkGenerator() {
                   />
                   <SparklesIcon className="absolute right-3 top-3 h-5 w-5 text-purple-300" />
                 </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl p-4 rounded-xl border border-white/10">
+                <AutoPrompt
+                  onPromptSelect={setPrompt}
+                />
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl p-4 rounded-xl border border-white/10">
+                <StyleSelector
+                  selectedStyle={selectedStyle}
+                  onStyleSelect={setSelectedStyle}
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

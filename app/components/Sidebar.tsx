@@ -7,6 +7,7 @@ import {
   PhotoIcon,
   Cog6ToothIcon,
   ChatBubbleLeftRightIcon,
+  VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Sidebar() {
@@ -15,6 +16,7 @@ export default function Sidebar() {
   const navigation = [
     { name: "AI Generate Hub", href: "/", icon: PhotoIcon },
     { name: "Chat", href: "/chat", icon: ChatBubbleLeftRightIcon },
+    { name: "YouTube Studio", href: "/youtube-studio", icon: VideoCameraIcon },
     { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
   ];
 
