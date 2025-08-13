@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import ImageGenerator from './components/ImageGenerator';
+import AuthGuard from './components/AuthGuard';
 import { Tab } from '@headlessui/react';
 import { PhotoIcon, SparklesIcon, Square3Stack3DIcon } from "@heroicons/react/24/outline";
 import AutoPromptGenerator from './components/AutoPromptGenerator';
@@ -23,9 +24,10 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
+    <AuthGuard>
+      <div className="flex h-screen">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto p-6">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -71,5 +73,6 @@ export default function Home() {
         </div>
       </main>
     </div>
+    </AuthGuard>
   );
 }

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getRequestContext } from "@cloudflare/next-on-pages";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const runtime = 'edge';
 
@@ -13,6 +14,7 @@ interface ChatRequest {
   messages: ChatMessage[];
   model?: string;
   image?: string;
+  geminiApiKey?: string;
 }
 
 export async function POST(request: NextRequest) {
