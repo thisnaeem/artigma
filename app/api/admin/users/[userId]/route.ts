@@ -12,7 +12,7 @@ export async function DELETE(
       headers: await headers(),
     });
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -43,12 +43,12 @@ export async function PATCH(
       headers: await headers(),
     });
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { userId } = params;
-    const body = await request.json();
+    const body = await request.json() as { role?: string };
     const { role } = body;
 
     if (!role || !['user', 'admin'].includes(role)) {

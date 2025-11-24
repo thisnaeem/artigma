@@ -6,6 +6,13 @@ import { useSession } from '@/lib/auth-client';
 import Sidebar from '../app/components/Sidebar';
 import { TrashIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
+interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  role?: string;
+}
+
 interface User {
   id: string;
   email: string;
@@ -22,7 +29,7 @@ export default function AdminPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!isPending && (!session || session.user.role !== 'admin')) {
+    if (!isPending && (!session || (session.user as SessionUser).role !== 'admin')) {
       router.push('/app');
     }
   }, [session, isPending, router]);
@@ -35,7 +42,7 @@ export default function AdminPage() {
     try {
       const response = await fetch('/api/admin/users');
       if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
+      const data = await response.json() as User[];
       setUsers(data);
     } catch (err: any) {
       setError(err.message);
@@ -85,7 +92,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || (session.user as SessionUser).role !== 'admin') {
     return null;
   }
 
