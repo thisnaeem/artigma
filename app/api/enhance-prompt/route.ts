@@ -1,40 +1,43 @@
 import { NextRequest } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getRequestContext } from "@cloudflare/next-on-pages";
 
 export const runtime = 'edge';
 
 interface EnhancePromptRequest {
   prompt: string;
-  apiKey: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, apiKey } = await request.json() as EnhancePromptRequest;
+    const { prompt } = await request.json() as EnhancePromptRequest;
 
     if (!prompt) {
       return Response.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    if (!apiKey) {
-      return Response.json({ error: 'Gemini API key is required' }, { status: 400 });
+    const ctx = getRequestContext();
+    if (!ctx?.env?.AI) {
+      throw new Error("AI binding not configured");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const ai = ctx.env.AI;
 
-    const result = await model.generateContent(`
-      Enhance the following image generation prompt to create exceptional, detailed, and visually striking images.
-      Make it more descriptive and artistic, while maintaining the original intent.
-      Add relevant style keywords, lighting, mood, and composition details.
-      Keep the enhanced prompt concise but impactful.
-      Return ONLY the enhanced prompt text without any prefixes or labels.
+    const response = await (ai as any).run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      messages: [
+        {
+          role: 'user',
+          content: `Enhance the following image generation prompt to create exceptional, detailed, and visually striking images.
+Make it more descriptive and artistic, while maintaining the original intent.
+Add relevant style keywords, lighting, mood, and composition details.
+Keep the enhanced prompt concise but impactful.
+Return ONLY the enhanced prompt text without any prefixes or labels.
 
-      Original prompt: "${prompt}"
-    `);
+Original prompt: "${prompt}"`
+        }
+      ]
+    });
 
-    const response = await result.response;
-    const enhancedPrompt = response.text()
+    const enhancedPrompt = response.response
       .trim()
       .replace(/^(Enhanced Prompt:|\*\*Enhanced Prompt:\*\*)\s*/i, '')  // Remove any "Enhanced Prompt:" prefix
       .replace(/^\s*Generate\s+/i, '')  // Remove leading "Generate" if present
@@ -49,4 +52,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

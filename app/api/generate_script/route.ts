@@ -1,59 +1,64 @@
-import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextRequest } from 'next/server';
+import { getRequestContext } from "@cloudflare/next-on-pages";
 
 export const runtime = 'edge';
 
-export async function POST(req: Request) {
-  try {
-    const { topic, apiKey } = await req.json() as { topic: string; apiKey: string };
+interface GenerateScriptRequest {
+  topic: string;
+  wordCount?: number;
+}
 
-    if (!topic || !apiKey) {
-      return NextResponse.json(
-        { error: 'Topic and API key are required' },
+export async function POST(request: NextRequest) {
+  try {
+    const { topic, wordCount = 400 } = await request.json() as GenerateScriptRequest;
+
+    if (!topic) {
+      return Response.json(
+        { error: 'Topic is required' },
         { status: 400 }
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const ctx = getRequestContext();
+    if (!ctx?.env?.AI) {
+      throw new Error("AI binding not configured");
+    }
 
-    const prompt = `Create a detailed YouTube video script about "${topic}". Structure it as follows:
+    const ai = ctx.env.AI;
 
-[TITLE]
-Create an engaging, SEO-friendly title for the video.
+    const prompt = `Write a natural, conversational YouTube video script about "${topic}". 
 
-[HOOK - 30 seconds]
-Write a compelling hook that grabs viewer attention in the first 30 seconds.
+Requirements:
+- Write approximately ${wordCount} words
+- Write it as if you're speaking directly to the viewer
+- Make it engaging and conversational
+- Include a strong hook at the beginning
+- Cover the main points thoroughly
+- End with a call to action
+- Do NOT use markdown formatting, headers, or bullet points
+- Do NOT include timestamps or section labels
+- Write it as one flowing script that sounds natural when spoken
+- Make it sound like a real person talking, not a structured document
 
-[INTRO - 1 minute]
-- Brief overview of what the video will cover
-- Why this topic matters
-- What viewers will learn
+Just write the script as natural speech that would be spoken in a YouTube video.`;
 
-[MAIN CONTENT]
-Divide the content into 3-4 clear sections. For each section:
-- Section title with timestamp
-- Key points and details
-- Examples or demonstrations
-- Transition to next section
+    const response = await (ai as any).run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
 
-[CALL TO ACTION]
-- Brief recap of key points
-- Call to action (subscribe, like, comment)
-- Teaser for next video
+    const script = response.response;
 
-Format the response with clear section headers, timestamps, and bullet points for easy reading. Make it conversational and engaging, as if speaking directly to the viewer.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const script = response.text();
-
-    return NextResponse.json({ script });
+    return Response.json({ script });
   } catch (error) {
-    console.error('Error in generate_script:', error);
-    return NextResponse.json(
+    console.error('Error generating script:', error);
+    return Response.json(
       { error: 'Failed to generate script' },
       { status: 500 }
     );
   }
-} 
+}

@@ -1,75 +1,74 @@
-import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextRequest } from 'next/server';
+import { getRequestContext } from "@cloudflare/next-on-pages";
 
 export const runtime = 'edge';
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { script, numPrompts, apiKey } = await req.json() as { script: string; numPrompts: number; apiKey: string };
+    const { script, numPrompts } = await request.json() as { script: string; numPrompts: number };
 
-    if (!script || !apiKey || !numPrompts) {
-      return NextResponse.json(
-        { error: 'Script, number of prompts, and API key are required' },
+    if (!script || !numPrompts) {
+      return Response.json(
+        { error: 'Script and number of prompts are required' },
         { status: 400 }
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const ctx = getRequestContext();
+    if (!ctx?.env?.AI) {
+      throw new Error("AI binding not configured");
+    }
 
-    const prompt = `Analyze this YouTube video script and create ${numPrompts} distinct image prompts that follow the story's progression. Each prompt should represent a key scene or visual moment from the script.
+    const ai = ctx.env.AI;
+
+    const prompt = `Analyze this YouTube video script and create exactly ${numPrompts} distinct image prompts that represent key visual moments from the script.
 
 Script:
 ${script}
 
-Create exactly ${numPrompts} separate image prompts. Format each prompt exactly as shown below, with a clear separator between prompts:
+Generate exactly ${numPrompts} image prompts. Each prompt should be a detailed description for image generation that captures a specific moment or concept from the script.
 
-===PROMPT 1===
-[Scene Description]
-Brief description of what's happening in this scene
-
-[Visual Details]
-Detailed image generation prompt including:
-- Composition and framing
-- Lighting and atmosphere
-- Color palette and mood
-- Key subjects and elements
-- Technical specifications (aspect ratio, style)
-
-===PROMPT 2===
-[Scene Description]
+Format your response as a numbered list like this:
+1. [First image prompt - detailed description for image generation]
+2. [Second image prompt - detailed description for image generation]
+3. [Third image prompt - detailed description for image generation]
 ...
+${numPrompts}. [Final image prompt - detailed description for image generation]
 
-Continue this exact format for all ${numPrompts} prompts. Make each prompt distinct and ensure they follow the script's chronological flow.`;
+Make each prompt detailed and visual, focusing on what would make compelling images for the video. Include details about composition, lighting, mood, and visual elements.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await (ai as any).run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
+
+    const text = response.response;
     
-    // Split the response into individual prompts using the separator
+    // Split the response into individual prompts using numbered list format
     const prompts = text
-      .split(/===PROMPT \d+===/g)  // Split by prompt separator
+      .split(/\n(?=\d+\.)/g)  // Split by numbered list items
       .filter(Boolean)  // Remove empty strings
-      .map(prompt => {
+      .map((prompt: string) => {
         // Clean up the prompt text
         return prompt
           .trim()
-          .replace(/\[Scene Description\]/g, '')
-          .replace(/\[Visual Details\]/g, '')
-          .replace(/^\s*-\s*/gm, '') // Remove bullet points
-          .split('\n')
-          .filter(Boolean)
-          .join('\n')
+          .replace(/^\d+\.\s*/, '')  // Remove number prefix
+          .replace(/\[.*?\]/g, '')  // Remove any bracketed text
           .trim();
       })
+      .filter((prompt: string) => prompt.length > 10)  // Filter out very short prompts
       .slice(0, numPrompts);  // Ensure we only return the requested number of prompts
 
-    return NextResponse.json({ prompts });
+    return Response.json({ prompts });
   } catch (error) {
-    console.error('Error in generate_prompts:', error);
-    return NextResponse.json(
+    console.error('Error generating prompts:', error);
+    return Response.json(
       { error: 'Failed to generate prompts' },
       { status: 500 }
     );
   }
-} 
+}
